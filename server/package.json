@@ -1,0 +1,35 @@
+{
+  "name": "hiresphere-server",
+  "version": "1.0.0",
+  "description": "HireSphere Online Job Portal Management System - Backend REST API (Express + MongoDB)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/seed/seed.js"
+  },
+  "keywords": [
+    "hiresphere",
+    "job-portal",
+    "mern",
+    "express",
+    "mongodb",
+    "mongoose",
+    "jwt"
+  ],
+  "author": "Mustafizur Rahman Mahfuz – 2023200000270, Md. Sajid Islam – 2023200000416",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.6.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
