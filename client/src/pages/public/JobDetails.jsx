@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import api, { getFileUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { getDemoJobById } from '../../utils/liveJobSync';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 
@@ -33,10 +34,17 @@ const JobDetails = () => {
   useEffect(() => {
     const loadDetails = async () => {
       setLoading(true);
+      const fallbackDemo = getDemoJobById(id);
+      if (fallbackDemo) {
+        setJob(fallbackDemo);
+      }
+
       try {
-        const { data } = await api.get(`/jobs/${id}`);
-        if (data.success) {
-          setJob(data.data);
+        if (!String(id).startsWith('demo-')) {
+          const { data } = await api.get(`/jobs/${id}`);
+          if (data.success) {
+            setJob(data.data);
+          }
         }
 
         if (user && user.role === 'JOB_SEEKER') {
@@ -54,7 +62,9 @@ const JobDetails = () => {
           }
         }
       } catch {
-        toast.error('Could not load job details.');
+        if (!fallbackDemo) {
+          toast.error('Could not load job details.');
+        }
       } finally {
         setLoading(false);
       }
@@ -82,18 +92,26 @@ const JobDetails = () => {
       navigate('/login');
       return;
     }
-    try {
-      if (isSaved) {
-        await api.delete(`/saved/${job._id}`);
-        setIsSaved(false);
-        toast.success('Removed from saved jobs.');
-      } else {
-        await api.post(`/saved/${job._id}`);
-        setIsSaved(true);
-        toast.success('Job saved to your favorites!');
+    if (isSaved) {
+      setIsSaved(false);
+      toast.success('Removed from saved jobs.');
+      try {
+        if (!String(job._id).startsWith('demo-')) {
+          await api.delete(`/saved/${job._id}`);
+        }
+      } catch {
+        // Ignore on demo item
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update saved jobs.');
+    } else {
+      setIsSaved(true);
+      toast.success('Job saved to your favorites!');
+      try {
+        if (!String(job._id).startsWith('demo-')) {
+          await api.post(`/saved/${job._id}`);
+        }
+      } catch {
+        // Ignore on demo item
+      }
     }
   };
 
@@ -101,11 +119,17 @@ const JobDetails = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { data } = await api.post(`/jobs/${job._id}/apply`, { coverNote });
-      if (data.success) {
+      if (String(job._id).startsWith('demo-')) {
         toast.success('Application submitted with your saved profile & resume!');
         setHasApplied(true);
         setApplyModalOpen(false);
+      } else {
+        const { data } = await api.post(`/jobs/${job._id}/apply`, { coverNote });
+        if (data.success) {
+          toast.success('Application submitted with your saved profile & resume!');
+          setHasApplied(true);
+          setApplyModalOpen(false);
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not submit application.');
@@ -234,7 +258,7 @@ const JobDetails = () => {
               ৳{Number(job.salaryMin).toLocaleString()} – ৳{Number(job.salaryMax).toLocaleString()}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Category: <span className="font-semibold text-slate-700">{job.category}</span>
+              Sector: <span className="font-semibold text-slate-700">{job.category}</span>
             </p>
 
             <div className="mt-6">
@@ -295,7 +319,7 @@ const JobDetails = () => {
               </p>
               <p>
                 <span className="font-semibold text-slate-800">Company Size:</span>{' '}
-                {job.company?.size || '11-50 employees'}
+                {job.company?.size || '51-200 employees'}
               </p>
               <p>
                 <span className="font-semibold text-slate-800">Location:</span>{' '}

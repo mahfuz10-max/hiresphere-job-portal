@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiSave, FiArrowLeft } from 'react-icons/fi';
+import { FiSave, FiArrowLeft, FiEdit3 } from 'react-icons/fi';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 
@@ -15,6 +15,7 @@ const CATEGORIES = [
   'Marketing',
   'Management',
   'Customer Support',
+  'Others',
 ];
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Internship', 'Remote', 'Contract'];
@@ -36,6 +37,7 @@ const EmployerJobForm = () => {
 
   const [loading, setLoading] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
 
   const [form, setForm] = useState({
     title: '',
@@ -57,9 +59,10 @@ const EmployerJobForm = () => {
         const { data } = await api.get(`/jobs/${id}`);
         if (data.success) {
           const j = data.data;
+          const isStandard = CATEGORIES.slice(0, -1).includes(j.category);
           setForm({
             title: j.title || '',
-            category: j.category || 'Software Engineering',
+            category: isStandard ? j.category : 'Others',
             location: j.location || 'Dhaka',
             jobType: j.jobType || 'Full-time',
             salaryMin: j.salaryMin || 0,
@@ -69,6 +72,9 @@ const EmployerJobForm = () => {
             description: j.description || '',
             requirements: j.requirements || '',
           });
+          if (!isStandard && j.category) {
+            setCustomCategory(j.category);
+          }
         }
       } catch {
         toast.error('Could not load job post for editing.');
@@ -86,16 +92,28 @@ const EmployerJobForm = () => {
       return;
     }
 
+    const finalCategory =
+      form.category === 'Others' ? customCategory.trim() : form.category;
+
+    if (!finalCategory) {
+      toast.error('Please enter your custom category name.');
+      return;
+    }
+
     setSubmitting(true);
     try {
+      const payload = {
+        ...form,
+        category: finalCategory,
+      };
       if (isEditing) {
-        const { data } = await api.put(`/jobs/${id}`, form);
+        const { data } = await api.put(`/jobs/${id}`, payload);
         if (data.success) {
           toast.success('Job post updated!');
           navigate('/employer/jobs');
         }
       } else {
-        const { data } = await api.post('/jobs', form);
+        const { data } = await api.post('/jobs', payload);
         if (data.success) {
           toast.success('New job posted!');
           navigate('/employer/jobs');
@@ -151,10 +169,24 @@ const EmployerJobForm = () => {
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {c === 'Others' ? 'Others (Write Custom Category)' : c}
                 </option>
               ))}
             </select>
+
+            {form.category === 'Others' && (
+              <div className="mt-2 flex items-center gap-2 rounded-md border border-blue-400 bg-blue-50/40 px-3 py-2">
+                <FiEdit3 className="h-4 w-4 shrink-0 text-[#1877F2]" />
+                <input
+                  type="text"
+                  required
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="Write custom category (e.g. Finance, HR, Civil Engineering...)"
+                  className="w-full bg-transparent text-sm text-slate-800 focus:outline-none"
+                />
+              </div>
+            )}
           </div>
         </div>
 

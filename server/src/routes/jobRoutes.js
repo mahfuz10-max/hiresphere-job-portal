@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const {
   getJobs,
+  getRecommendedJobs,
   getJobById,
   createJob,
   updateJob,
@@ -33,6 +34,9 @@ const jobValidation = [
 
 // Employer specific list route (must come before /:id)
 router.get('/mine/list', protect, authorize('EMPLOYER'), getMyJobs);
+
+// Personalized Job Seeker recommendations route (must come before /:id)
+router.get('/recommendations', protect, getRecommendedJobs);
 
 // Public routes
 router.get('/', getJobs);

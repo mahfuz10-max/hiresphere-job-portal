@@ -1,7 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-export const SERVER_BASE_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const DEFAULT_SERVER_URL = isLocalhost
+  ? 'http://localhost:5000'
+  : 'https://hiresphere-job-portal-j8df.onrender.com';
+
+export const SERVER_BASE_URL = import.meta.env.VITE_SERVER_URL || DEFAULT_SERVER_URL;
+export const API_BASE_URL = import.meta.env.VITE_API_URL || `${SERVER_BASE_URL}/api`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

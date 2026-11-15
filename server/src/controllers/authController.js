@@ -13,9 +13,19 @@ const signToken = (userId) => {
 
 // POST /api/auth/register
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password, role, companyName } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    companyName,
+    preferredCategory,
+    skills,
+    location,
+    headline,
+  } = req.body;
 
-  const allowedRoles = ['JOB_SEEKER', 'EMPLOYER'];
+  const allowedRoles = ['JOB_SEEKER', 'EMPLOYER', 'ADMIN'];
   const assignedRole = allowedRoles.includes(role) ? role : 'JOB_SEEKER';
 
   const existing = await User.findOne({ email: email.toLowerCase().trim() });
@@ -31,10 +41,27 @@ const register = asyncHandler(async (req, res) => {
   });
 
   if (assignedRole === 'JOB_SEEKER') {
+    const parsedSkills = Array.isArray(skills)
+      ? skills.map((s) => String(s).trim()).filter(Boolean)
+      : typeof skills === 'string'
+      ? skills
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    const initialHeadline =
+      headline && headline.trim()
+        ? headline.trim()
+        : preferredCategory && preferredCategory.trim()
+        ? `${preferredCategory.trim()} Specialist`
+        : 'Aspiring Professional';
+
     await Profile.create({
       user: user._id,
-      headline: 'Aspiring Professional',
-      skills: [],
+      headline: initialHeadline,
+      skills: parsedSkills,
+      location: location && location.trim() ? location.trim() : 'Dhaka, Bangladesh',
     });
   } else if (assignedRole === 'EMPLOYER') {
     await Company.create({

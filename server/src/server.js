@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { sendResponse } = require('./utils/apiResponse');
+const { ensureAdditionalJobs } = require('./utils/ensureAdditionalJobs');
 
 dotenv.config();
 
@@ -15,7 +16,9 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 
-connectDB();
+connectDB().then(() => {
+  ensureAdditionalJobs();
+});
 
 app.use(
   cors({

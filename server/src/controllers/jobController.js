@@ -1,5 +1,6 @@
 const Job = require('../models/Job');
 const Company = require('../models/Company');
+const Profile = require('../models/Profile');
 const Application = require('../models/Application');
 const SavedJob = require('../models/SavedJob');
 const asyncHandler = require('../utils/asyncHandler');
@@ -44,7 +45,7 @@ const getJobs = asyncHandler(async (req, res) => {
   }
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.max(1, Math.min(50, parseInt(limit, 10) || 10));
+  const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
 
   const [jobs, total] = await Promise.all([
@@ -64,6 +65,99 @@ const getJobs = asyncHandler(async (req, res) => {
       limit: limitNum,
       totalPages: Math.ceil(total / limitNum) || 1,
     },
+  });
+});
+
+// @desc    Get personalized recommended jobs for a Job Seeker
+// @route   GET /api/jobs/recommendations
+// @access  Private (JOB_SEEKER)
+const getRecommendedJobs = asyncHandler(async (req, res) => {
+  const [profile, applications, allActiveJobs] = await Promise.all([
+    Profile.findOne({ user: req.user._id }),
+    Application.find({ applicant: req.user._id }).select('job'),
+    Job.find({ isActive: true })
+      .populate('company', 'name logoPath location industry website size isVerified')
+      .sort({ createdAt: -1 }),
+  ]);
+
+  const appliedJobIds = new Set(applications.map((a) => String(a.job)));
+  const skills = Array.isArray(profile?.skills)
+    ? profile.skills.map((s) => s.toLowerCase().trim()).filter(Boolean)
+    : [];
+  const headline = (profile?.headline || '').toLowerCase();
+  const userLocation = (profile?.location || '').toLowerCase();
+
+  const candidateJobs = allActiveJobs.filter(
+    (job) => !appliedJobIds.has(String(job._id)) && new Date(job.deadline) >= new Date()
+  );
+
+  const scored = candidateJobs.map((job) => {
+    const jobObj = job.toObject();
+    const searchable = `${job.title} ${job.category} ${job.description} ${job.requirements}`.toLowerCase();
+    let score = 0;
+    const matchedSkills = [];
+
+    skills.forEach((skill) => {
+      if (skill && searchable.includes(skill)) {
+        score += 15;
+        matchedSkills.push(skill);
+      }
+    });
+
+    if (headline && headline !== 'aspiring professional') {
+      const headlineTokens = headline
+        .split(/[\s,/&-]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 2 && !['and', 'the', 'for', 'specialist', 'developer', 'engineer'].includes(t));
+
+      headlineTokens.forEach((token) => {
+        if (searchable.includes(token)) {
+          score += 10;
+        }
+      });
+
+      if (job.category && headline.includes(job.category.toLowerCase())) {
+        score += 20;
+      }
+    }
+
+    if (userLocation && job.location && userLocation.includes(job.location.toLowerCase())) {
+      score += 5;
+    }
+
+    if (job.company?.isVerified) {
+      score += 4;
+    }
+
+    let matchReason = 'Recommended for New Candidates';
+    if (matchedSkills.length > 0) {
+      const displaySkills = matchedSkills
+        .slice(0, 3)
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(', ');
+      matchReason = `Matches your skills: ${displaySkills}`;
+    } else if (score >= 14) {
+      matchReason = `Matches your interest in ${job.category}`;
+    } else if (job.company?.isVerified) {
+      matchReason = `Top Verified Employer in ${job.category}`;
+    }
+
+    return {
+      ...jobObj,
+      recommendationScore: score,
+      matchReason,
+    };
+  });
+
+  scored.sort((a, b) => {
+    if (b.recommendationScore !== a.recommendationScore) {
+      return b.recommendationScore - a.recommendationScore;
+    }
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  return sendResponse(res, 200, true, 'Recommended jobs fetched successfully.', {
+    recommendations: scored.slice(0, 8),
   });
 });
 
@@ -253,6 +347,7 @@ const getMyJobs = asyncHandler(async (req, res) => {
 
 module.exports = {
   getJobs,
+  getRecommendedJobs,
   getJobById,
   createJob,
   updateJob,

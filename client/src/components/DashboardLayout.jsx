@@ -39,19 +39,19 @@ const DashboardLayout = () => {
   const links = ROLE_LINKS[user?.role] || [];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
         <aside className="lg:col-span-3">
-          <div className="sticky top-24 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
-            <div className="mb-4 border-b border-slate-100 pb-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-blue-600">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs lg:sticky lg:top-24">
+            <div className="mb-3 border-b border-slate-100 pb-3 sm:mb-4 sm:pb-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#1877F2]">
                 {user?.role?.replace('_', ' ')} WORKSPACE
               </p>
               <p className="mt-1 truncate text-base font-bold text-slate-900">{user?.name}</p>
               <p className="truncate text-xs text-slate-500">{user?.email}</p>
             </div>
 
-            <nav className="space-y-1.5">
+            <nav className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-1">
               {links.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -60,15 +60,15 @@ const DashboardLayout = () => {
                     to={item.to}
                     end
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                      `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:text-sm ${
                         isActive
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          ? 'bg-[#1877F2] text-white shadow-xs'
+                          : 'bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:bg-transparent'
                       }`
                     }
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
+                    <span className="truncate">{item.label}</span>
                   </NavLink>
                 );
               })}
@@ -76,7 +76,7 @@ const DashboardLayout = () => {
           </div>
         </aside>
 
-        <main className="lg:col-span-9">
+        <main className="min-w-0 lg:col-span-9">
           <Outlet />
         </main>
       </div>

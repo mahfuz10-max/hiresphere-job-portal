@@ -4,6 +4,14 @@ A full-stack **MERN (MongoDB, Express.js, React.js, Node.js)** web application c
 
 ---
 
+## Academic Project Metadata
+
+- **Members:** Mustafizur Rahman Mahfuz – 2023200000270, Md. Sajid Islam – 2023200000416
+- **Course:** Web & Internet Programming Lab (CSE472.6)
+- **Submitted To:** Anik Mahmud Shanto, Lecturer, Department of CSE, Southeast University
+- **Date of Submission:** 15 November 2026
+
+---
 
 ## Application Preview Screenshots
 
@@ -221,8 +229,3 @@ All endpoints return a consistent JSON envelope:
 | **Admin** | `PATCH` | `/api/admin/employers/:id/verify` | `ADMIN` | Verify or unverify employer company |
 | **Admin** | `GET` | `/api/admin/jobs` | `ADMIN` | List all job posts for moderation |
 | **Admin** | `DELETE` | `/api/admin/jobs/:id` | `ADMIN` | Remove inappropriate or fraudulent job post |
-
-
-## 🌐 Live Demo
-
-[![Netlify Status](https://img.shields.io/badge/Live%20Demo-Visit%20Site-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://hiresphere-job-portal.netlify.app/)

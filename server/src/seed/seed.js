@@ -8,6 +8,7 @@ const Company = require('../models/Company');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
 const SavedJob = require('../models/SavedJob');
+const { ensureAdditionalJobs } = require('../utils/ensureAdditionalJobs');
 
 dotenv.config();
 
@@ -671,6 +672,8 @@ const seedDatabase = async () => {
     await Application.insertMany(sampleApplications);
 
     // 6. Create Sample Saved Jobs for Mahfuz & Sajid
+    await ensureAdditionalJobs();
+
     await SavedJob.insertMany([
       { user: seekerUsers[0]._id, job: createdJobs[0]._id },
       { user: seekerUsers[0]._id, job: createdJobs[1]._id },
